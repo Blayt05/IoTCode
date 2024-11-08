@@ -9,9 +9,14 @@
 // Definimos los pines para el sensor ultrasónico y los LEDs
 const int trigPin = 12;
 const int echoPin = 14;
-  // const int ledVerde = 5;
-  // const int ledAmarillo = 4;
-  // const int ledRojo = 0;
+const int ledVerde = 5;
+const int ledAmarillo = 4;
+const int ledRojo = 0;
+
+// Definimos los tiempos en segundos para cada LED
+const int tiempoVerde = 5;
+const int tiempoAmarillo = 1;
+const int tiempoRojo = 5;
 
 
 void setup(void)
@@ -19,7 +24,10 @@ void setup(void)
 
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
- 
+  
+  pinMode(ledVerde, OUTPUT);
+  pinMode(ledAmarillo, OUTPUT);
+  pinMode(ledRojo, OUTPUT);
 
 	Serial.begin(115200);
 	SPIFFS.begin();
@@ -37,6 +45,10 @@ void loop()
   PublisMqtt(deteccion); // Lo que hace es llamar a una funcion que publica el dato "1" o "0"
   delay(1000);
   
+  // Llama a la función de manejo de LEDs y publica el estado de cada uno
+  manejarLedsYPublicar();
+
+
 	HandleMqtt();
 
 	
@@ -74,6 +86,30 @@ int detectarCarro() {
     }
 
 }
+
+void manejarLedsYPublicar() {
+    // Encender el LED verde, apagar los otros, y publicar el estado
+    digitalWrite(ledVerde, HIGH);
+    digitalWrite(ledAmarillo, LOW);
+    digitalWrite(ledRojo, LOW);
+    PublisMqttLedState("Verde", tiempoVerde);
+    delay(tiempoVerde * 1000); // Convertir a milisegundos
+
+    // Encender el LED amarillo, apagar los otros, y publicar el estado
+    digitalWrite(ledVerde, LOW);
+    digitalWrite(ledAmarillo, HIGH);
+    digitalWrite(ledRojo, LOW);
+    PublisMqttLedState("Amarillo", tiempoAmarillo);
+    delay(tiempoAmarillo * 1000);
+
+    // Encender el LED rojo, apagar los otros, y publicar el estado
+    digitalWrite(ledVerde, LOW);
+    digitalWrite(ledAmarillo, LOW);
+    digitalWrite(ledRojo, HIGH);
+    PublisMqttLedState("Rojo", tiempoRojo);
+    delay(tiempoRojo * 1000);
+}
+
 
 
 
