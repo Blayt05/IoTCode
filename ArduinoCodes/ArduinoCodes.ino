@@ -18,6 +18,8 @@ const int tiempoVerde = 5;
 const int tiempoAmarillo = 1;
 const int tiempoRojo = 5;
 
+unsigned long previousMillis = 0;  // Para manejar el tiempo sin delay()
+const long interval = 1000;  // Intervalo de 1 segundo para hacer acciones periódicas
 
 void setup(void)
 {
@@ -41,19 +43,23 @@ void setup(void)
 void loop()
 {
 
-  int deteccion = detectarCarro(); //Llama a detectarCarro y guarda el resultado
-  PublisMqtt(deteccion); // Lo que hace es llamar a una funcion que publica el dato "1" o "0"
-  delay(1000);
+  unsigned long currentMillis = millis();
   
-  // Llama a la función de manejo de LEDs y publica el estado de cada uno
-  manejarLedsYPublicar();
+  // Verifica si ha pasado el intervalo de 1 segundo
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
 
+    int deteccion = detectarCarro(); //Llama a detectarCarro y guarda el resultado
+    PublisMqtt(deteccion); // Lo que hace es llamar a una funcion que publica el dato "1" o "0"
+  
+    // Llama a la función de manejo de LEDs y publica el estado de cada uno
+    manejarLedsYPublicar();
+  }
 
+  
 	HandleMqtt();
 
-	
 
-	delay(1000);
 }
 
 

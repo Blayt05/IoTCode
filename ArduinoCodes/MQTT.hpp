@@ -18,10 +18,17 @@ void SuscribeMqtt()
 String payload;
 void PublisMqtt(unsigned long data)
 {
-	payload = "";
-	payload = String(data);
-	mqttClient.publish("arduino_1/sensor_deteccion", (char*)payload.c_str());
+  payload = "";
+  payload = String(data);
+
+  // Publicar los datos en el tópico MQTT
+  mqttClient.publish("arduino_1/sensor_deteccion", (char*)payload.c_str());
+
+  // Mostrar los datos en el monitor serial
+  Serial.print("Publicando: ");
+  Serial.println(payload);
 }
+
 
 // Función para publicar el color del LED y el tiempo en segundos
 void PublisMqttLedState(const String& ledColor, int timeOn)
@@ -45,6 +52,5 @@ void OnMqttReceived(char* topic, byte* payload, unsigned int length)
 	for (size_t i = 0; i < length; i++) {
 		content.concat((char)payload[i]);
 	}
-	Serial.print(content);
-	Serial.println();
+	Serial.println(content);
 }

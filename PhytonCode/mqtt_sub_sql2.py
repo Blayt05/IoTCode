@@ -3,7 +3,7 @@ import threading
 import paho.mqtt.client as paho
 import time
 import signal
-
+import json
 
 import mysql.connector
 from mysql.connector import errorcode
@@ -59,12 +59,14 @@ client2 = paho.Client()
 
 data1 = None
 data2 = None
+data_color_time = None
 
 apprun = True
 
-def insert_into_db(data):
+# Función para insertar el valor de detección
+def insert_into_db_detection(data):
     try:
-        # Connect to the MySQL server
+        # Conectar a la base de datos
         cnx = mysql.connector.connect(
             host=host,
             user=user,
@@ -73,11 +75,11 @@ def insert_into_db(data):
         )
         cursor = cnx.cursor()
 
-        # Insert the received payload into the table
-        insertion_query = f"INSERT INTO {table_name} (detection) VALUES ({data})"
-        cursor.execute(insertion_query)
+        # Insertar el valor de detección en la tabla 'traffic_detection'
+        insertion_query = "INSERT INTO traffic_detection (detection) VALUES (%s)"
+        cursor.execute(insertion_query, (data,))  # Usamos un solo valor, por eso va en una tupla
         cnx.commit()
-        print(f"Inserted value {data} into table '{table_name}'.")
+        print(f"Inserted value {data} into table 'traffic_detection' (detection).")
 
     except mysql.connector.Error as err:
         print(f"Database Error: {err}")
@@ -85,17 +87,71 @@ def insert_into_db(data):
         cursor.close()
         cnx.close()
 
+def insert_into_db_led_settings(color, time):
+    try:
+        # Conectar a la base de datos
+        cnx = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+            database=database_name
+        )
+        cursor = cnx.cursor()
+
+        # Crear la consulta SQL para insertar el color y el tiempo
+        insertion_query = f"INSERT INTO settings_leds (led_color, time_leds) VALUES (%s, %s)"
+        
+        # Ejecutar la consulta con los parámetros
+        cursor.execute(insertion_query, (color, time))
+        
+        # Confirmar la transacción
+        cnx.commit()
+        
+        # Confirmación de inserción
+        print(f"Inserted color '{color}' and time {time} into 'settings_leds' table.")
+
+    except mysql.connector.Error as err:
+        print(f"Database Error: {err}")
+    finally:
+        cursor.close()
+        cnx.close()
+
+
 def message_handling_1(client, userdata, msg):
     global data1
     data1 = msg.payload.decode()
-    insert_into_db(data1)
+    insert_into_db_detection(data1)
     #print(f"{msg.topic}: {data1}")
 
 def message_handling_2(client, userdata, msg):
     global data2
     data2 = msg.payload.decode()
-    insert_into_db(data2)
+    insert_into_db_detection(data2)
     #print(f"{msg.topic}: {data2}")
+
+def message_handling_color_time(client, userdata, msg):
+    global data_color_time
+    try:
+        # Decodificar el mensaje en texto plano
+        message = msg.payload.decode()  # Obtener el mensaje como texto
+
+        # Separar los componentes del mensaje
+        parts = message.split(",")  # Separa en dos partes usando la coma como delimitador
+
+        # Extraer y limpiar el color
+        color = parts[0].split(":")[1].strip()  # Separa por el colon y quita los espacios
+
+        # Extraer y limpiar el tiempo
+        time_str = parts[1].split(":")[1].strip()  # Separa por el colon y quita los espacios
+        time = int(time_str.split()[0])  # Solo tomar el número antes de la palabra "segundos"
+
+        # Insertar el color y el tiempo en la base de datos
+        insert_into_db_led_settings(color, time)
+
+        print(f"Color: {color}, Time: {time}")
+        
+    except Exception as e:
+        print(f"Error al procesar el mensaje: {e}") 
 
 def loop_1(num):
     global client1
@@ -107,6 +163,10 @@ def loop_2(num):
         
 client1.on_message = message_handling_1
 client2.on_message = message_handling_2
+
+client1.message_callback_add("arduino_1/led_state", message_handling_color_time)
+client1.message_callback_add("arduino_1/sensor_deteccion", message_handling_1)
+
 
 def signal_handler(sig, frame):
     global client1
@@ -128,6 +188,7 @@ if client2.connect("10.22.181.132", 1883, 60) != 0:
     exit(1)
 
 client1.subscribe("arduino_1/sensor_deteccion")
+client1.subscribe("arduino_1/led_state")
 client2.subscribe("arduino_2/hello_esp8266")
 
 try:
