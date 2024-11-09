@@ -67,37 +67,41 @@ def insert_traffic_light(address_light, type_light):
         )
         cursor = cnx.cursor()
 
-        # Determinar el valor de light_id basado en el tipo de semáforo
-        if type_light == "Semaforo Vehicular":
-            light_id_value = 1
-        elif type_light == "Semaforo Peatonal":
-            light_id_value = 2
+        # Verificar si el semáforo ya existe en la base de datos
+        select_query = f"SELECT light_id FROM {table_name_traffic_light} WHERE address_light = %s"
+        cursor.execute(select_query, (address_light,))
+        result = cursor.fetchone()
+
+        if result:  # Si el semáforo ya existe, usamos el light_id existente
+            light_id_value = result[0]
+            print(f"Light with address '{address_light}' already exists. Using light_id {light_id_value}.")
         else:
-            print("Unknown light type")
-            return
+            # Si no existe, insertamos un nuevo semáforo
+            if type_light == "Semaforo Vehicular":
+                light_id_value = 1
+            elif type_light == "Semaforo Peatonal":
+                light_id_value = 2
+            else:
+                print("Unknown light type")
+                return
 
-        check_light_id_query = f"SELECT COUNT(*) FROM {table_name_traffic_light} WHERE light_id = %s"
-        cursor.execute(check_light_id_query, (light_id_value,))
-        count = cursor.fetchone()[0]
+            # Insertar en `traffic_light` sin verificar duplicados, dejando que MySQL maneje el light_id
+            insert_light_query = f"INSERT INTO {table_name_traffic_light} (address_light, type_light) VALUES (%s, %s)"
+            cursor.execute(insert_light_query, (address_light, type_light))
 
-        if count > 0:
-            print(f"El light_id {light_id_value} ya está registrado en la base de datos.")
-            return
+            # Obtener el light_id recién creado
+            light_id_value = cursor.lastrowid
+            print(f"Inserted light_id {light_id_value}, address_light '{address_light}', type_light '{type_light}'.")
 
-        # Insertar en `traffic_light` con light_id específico
-        insert_light_query = f"INSERT INTO {table_name_traffic_light} (light_id, address_light, type_light) VALUES (%s, %s, %s)"
-        cursor.execute(insert_light_query, (light_id_value, address_light, type_light))
-        
-        # Obtener el light_id recién creado
-        last_light_id = cursor.lastrowid
-        print(f"Inserted light_id {light_id_value}, address_light '{address_light}', type_light '{type_light}' with light_id {last_light_id}.")
-        return last_light_id
+        return light_id_value
 
     except mysql.connector.Error as err:
         print(f"Database Error: {err}")
     finally:
         cursor.close()
         cnx.close()
+
+
 
 def insert_traffic_detection(detection, light_id):
     try:
