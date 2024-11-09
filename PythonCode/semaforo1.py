@@ -67,39 +67,43 @@ def insert_traffic_light(address_light, type_light):
         )
         cursor = cnx.cursor()
 
-        # Verificar si el semáforo ya existe en la base de datos
-        select_query = f"SELECT light_id FROM {table_name_traffic_light} WHERE address_light = %s"
-        cursor.execute(select_query, (address_light,))
+        # Determinar el `light_id` basado en el tipo de semáforo
+        if type_light == "Semaforo Vehicular":
+            light_id_value = 1
+        elif type_light == "Semaforo Peatonal":
+            light_id_value = 2
+        else:
+            print("Unknown light type")
+            return None
+
+        # Verificar si el semáforo con ese `address_light` y `type_light` ya existe
+        select_query = f"SELECT light_id FROM {table_name_traffic_light} WHERE address_light = %s AND type_light = %s"
+        cursor.execute(select_query, (address_light, type_light))
         result = cursor.fetchone()
 
-        if result:  # Si el semáforo ya existe, usamos el light_id existente
+        if result:
+            # Si ya existe, usar el `light_id` existente
             light_id_value = result[0]
-            print(f"Light with address '{address_light}' already exists. Using light_id {light_id_value}.")
+            print(f"Using existing light_id {light_id_value} for address '{address_light}', type '{type_light}'.")
         else:
-            # Si no existe, insertamos un nuevo semáforo
-            if type_light == "Semaforo Vehicular":
-                light_id_value = 1
-            elif type_light == "Semaforo Peatonal":
-                light_id_value = 2
-            else:
-                print("Unknown light type")
-                return
-
-            # Insertar en `traffic_light` sin verificar duplicados, dejando que MySQL maneje el light_id
+            # Si no existe, insertar un nuevo registro con el `light_id` determinado
             insert_light_query = f"INSERT INTO {table_name_traffic_light} (address_light, type_light) VALUES (%s, %s)"
             cursor.execute(insert_light_query, (address_light, type_light))
+            cnx.commit()  # Asegurarse de confirmar la inserción
 
-            # Obtener el light_id recién creado
+            # Obtener el nuevo `light_id` asignado
             light_id_value = cursor.lastrowid
-            print(f"Inserted light_id {light_id_value}, address_light '{address_light}', type_light '{type_light}'.")
+            print(f"Inserted new light_id {light_id_value} for address '{address_light}', type '{type_light}'.")
 
         return light_id_value
 
     except mysql.connector.Error as err:
         print(f"Database Error: {err}")
+        return None
     finally:
         cursor.close()
         cnx.close()
+
 
 
 
@@ -152,7 +156,6 @@ def insert_settings_leds(color, time_leds, light_id):
 def insert_data(address_light, type_light, detection, color, time_leds):
     # Insertar en `traffic_light` primero y obtener el light_id
     light_id = insert_traffic_light(address_light, type_light)
-    
     if light_id:  # Si se insertó correctamente en `traffic_light`, procedemos con los otros insertos
         # Insertar en `traffic_detection`
         insert_traffic_detection(detection, light_id)
@@ -180,9 +183,9 @@ def message_handling_color_time(client, userdata, msg):
         time_leds = int(time_str.split()[0])
 
         if client == client1:
-            insert_data(coordinates_client1, type_light_client1, 1, color, time_leds)
+            insert_data(coordinates_client1, type_light_client1, data1, color, time_leds)
         else:
-            insert_data(coordinates_client2, type_light_client2, 1, color, time_leds)
+            insert_data(coordinates_client2, type_light_client2, data2, color, time_leds)
 
         print(f"Color: {color}, Time: {time_leds}")
 
@@ -217,11 +220,11 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-if client1.connect("172.20.10.3", 1883, 60) != 0:
+if client1.connect("10.22.181.132", 1883, 60) != 0:
     print("Couldn't connect to the mqtt broker")
     exit(1)
     
-if client2.connect("172.20.10.3", 1883, 60) != 0:
+if client2.connect("10.22.181.132", 1883, 60) != 0:
     print("Couldn't connect to the mqtt broker")
     exit(1)
 
