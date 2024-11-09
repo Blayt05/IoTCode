@@ -9,9 +9,9 @@ import mysql.connector
 from mysql.connector import errorcode
 
 # Replace these variables with your MySQL server's credentials
-host = "localhost"
-user = "root"
-password = "booz2005"
+host = os.getenv("HOST")
+user = os.getenv("USER")
+password = os.getenv("PASSWORD")
 
 # Database and table names
 database_name = "ciudadesinteligentes"
