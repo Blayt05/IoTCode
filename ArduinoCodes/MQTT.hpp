@@ -1,7 +1,7 @@
 
 const char* MQTT_BROKER_ADRESS = "10.22.181.132";
 const uint16_t MQTT_PORT = 1883;
-const char* MQTT_CLIENT_NAME = "ESP8266Client_1";
+const char* MQTT_CLIENT_NAME = "ESP8266Client_2";
 
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -9,8 +9,8 @@ PubSubClient mqttClient(espClient);
 // Función para suscribirse a los temas MQTT
 void SuscribeMqtt()
 {
-	mqttClient.subscribe("arduino_1/sensor_deteccion"); // Suscribirse al tema para la deteccion del carro
-  mqttClient.subscribe("arduino_1/led_state");  // Suscribirse al tema para el estado de los LEDs
+	mqttClient.subscribe("arduino_2/sensor_deteccion"); // Suscribirse al tema para la deteccion del carro
+  mqttClient.subscribe("arduino_2/led_state");  // Suscribirse al tema para el estado de los LEDs
 }
 
 // Función para publicar los datos de detección de carro
@@ -21,7 +21,7 @@ void PublisMqtt(unsigned long data)
   payload = String(data);
 
   // Publicar los datos en el tópico MQTT
-  mqttClient.publish("arduino_1/sensor_deteccion", (char*)payload.c_str());
+  mqttClient.publish("arduino_2/sensor_deteccion", (char*)payload.c_str());
 
   // Mostrar los datos en el monitor serial
   Serial.print("Publicando: ");
@@ -34,7 +34,7 @@ void PublisMqttLedState(const String& ledColor, int timeOn)
 {
     // Crear el payload solo con el color del LED y el tiempo
     String payload = "Color: " + ledColor + ", Tiempo: " + String(timeOn) + " segundos";
-    mqttClient.publish("arduino_1/led_state", payload.c_str());  // Publicar en el tema "arduino_1/led_state"
+    mqttClient.publish("arduino_2/led_state", payload.c_str());  // Publicar en el tema "arduino_1/led_state"
     Serial.println("Publicado: " + payload);  // Para depuración en el monitor serie
 }
 
