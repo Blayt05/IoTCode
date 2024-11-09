@@ -67,15 +67,6 @@ def insert_traffic_light(address_light, type_light):
         )
         cursor = cnx.cursor()
 
-        # Determinar el `light_id` basado en el tipo de semáforo
-        if type_light == "Semaforo Vehicular":
-            light_id_value = 1
-        elif type_light == "Semaforo Peatonal":
-            light_id_value = 2
-        else:
-            print("Unknown light type")
-            return None
-
         # Verificar si el semáforo con ese `address_light` y `type_light` ya existe
         select_query = f"SELECT light_id FROM {table_name_traffic_light} WHERE address_light = %s AND type_light = %s"
         cursor.execute(select_query, (address_light, type_light))
@@ -86,12 +77,12 @@ def insert_traffic_light(address_light, type_light):
             light_id_value = result[0]
             print(f"Using existing light_id {light_id_value} for address '{address_light}', type '{type_light}'.")
         else:
-            # Si no existe, insertar un nuevo registro con el `light_id` determinado
+            # Si no existe, insertar un nuevo registro y obtener el nuevo `light_id` asignado automáticamente
             insert_light_query = f"INSERT INTO {table_name_traffic_light} (address_light, type_light) VALUES (%s, %s)"
             cursor.execute(insert_light_query, (address_light, type_light))
-            cnx.commit()  # Asegurarse de confirmar la inserción
+            cnx.commit()  # Confirmar la inserción
 
-            # Obtener el nuevo `light_id` asignado
+            # Obtener el nuevo `light_id` asignado por `AUTO_INCREMENT`
             light_id_value = cursor.lastrowid
             print(f"Inserted new light_id {light_id_value} for address '{address_light}', type '{type_light}'.")
 
@@ -103,6 +94,7 @@ def insert_traffic_light(address_light, type_light):
     finally:
         cursor.close()
         cnx.close()
+
 
 
 
