@@ -1,6 +1,5 @@
 import sys
 import threading
-import os
 import paho.mqtt.client as paho
 import time
 import signal
@@ -100,7 +99,6 @@ def insert_traffic_light(address_light, type_light):
     finally:
         cursor.close()
         cnx.close()
-
 
 
 def insert_traffic_detection(detection, light_id):

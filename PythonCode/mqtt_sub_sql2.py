@@ -1,6 +1,5 @@
 import sys
 import threading
-import os
 import paho.mqtt.client as paho
 import time
 import signal
@@ -10,9 +9,9 @@ import mysql.connector
 from mysql.connector import errorcode
 
 # Replace these variables with your MySQL server's credentials
-host = "localhost"
-user = "root"
-password = "booz2005"
+host = os.getenv("HOST")
+user = os.getenv("USER")
+password = os.getenv("PASSWORD")
 
 # Database and table names
 database_name = "ciudadesinteligentes"
@@ -100,7 +99,6 @@ def insert_traffic_light(address_light, type_light):
     finally:
         cursor.close()
         cnx.close()
-
 
 
 def insert_traffic_detection(detection, light_id):
