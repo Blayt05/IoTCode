@@ -1,5 +1,6 @@
 import sys
 import threading
+import os
 import paho.mqtt.client as paho
 import time
 import signal
