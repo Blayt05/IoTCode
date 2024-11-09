@@ -1,5 +1,5 @@
 
-const char* MQTT_BROKER_ADRESS = "10.22.181.132";
+const char* MQTT_BROKER_ADRESS = "172.20.10.3";
 const uint16_t MQTT_PORT = 1883;
 const char* MQTT_CLIENT_NAME = "ESP8266Client_1";
 
@@ -11,7 +11,6 @@ void SuscribeMqtt()
 {
 	mqttClient.subscribe("arduino_1/sensor_deteccion"); // Suscribirse al tema para la deteccion del carro
   mqttClient.subscribe("arduino_1/led_state");  // Suscribirse al tema para el estado de los LEDs
-
 }
 
 // Función para publicar los datos de detección de carro

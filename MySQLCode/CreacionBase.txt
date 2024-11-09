@@ -4,32 +4,32 @@
 
 USE ciudadesinteligentes     //Se utiliza este comando en MySQL para elegir la base de datos a utilizar 
 
-//Query para crear la tabla traffic_light que nos ayudara a guardar datos de los semaforos.
 CREATE TABLE traffic_light (
-    light_id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,    -- id como clave primaria
+    light_id INT,                          -- light_id como columna normal (puede tener duplicados)
     address_light VARCHAR(100),
     type_light VARCHAR(50)
 );
 
 
-//Query que crea la tabla traffic_detection que nos ayudara a guardar datos de la deteccion de un carro
+-- Crear la tabla traffic_detection, ahora que traffic_light tiene el índice en light_id
 CREATE TABLE traffic_detection (
     id INT AUTO_INCREMENT PRIMARY KEY,
     detection BOOLEAN,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    light_id INT,
-    CONSTRAINT fk_traffic_light FOREIGN KEY (light_id) REFERENCES traffic_light(light_id)
+    light_id INT,  
+    CONSTRAINT fk_traffic_light FOREIGN KEY (light_id) REFERENCES traffic_light(light_id)  -- Referencia a light_id en traffic_light
 );
 
 
-//Query que crea la tabla seetings_leds que nos ayudara a guardar datos de los tiempos de los leds del semaforo
+-- Crear la tabla settings_leds, con la misma referencia de light_id
 CREATE TABLE settings_leds (
     leds_id INT AUTO_INCREMENT PRIMARY KEY,
     led_color VARCHAR(50),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     time_leds INT,
-    light_id INT,
-    CONSTRAINT fk_settings_leds FOREIGN KEY (light_id) REFERENCES traffic_light(light_id)
+    light_id INT,  
+    CONSTRAINT fk_settings_leds FOREIGN KEY (light_id) REFERENCES traffic_light(light_id)  -- Referencia a light_id en traffic_light
 );
 
 
