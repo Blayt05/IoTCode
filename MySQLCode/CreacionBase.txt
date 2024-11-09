@@ -4,15 +4,14 @@
 
 USE ciudadesinteligentes     //Se utiliza este comando en MySQL para elegir la base de datos a utilizar 
 
+-- Modificar la tabla traffic_light, haciendo que light_id sea la clave primaria
 CREATE TABLE traffic_light (
-    id INT AUTO_INCREMENT PRIMARY KEY,    -- id como clave primaria
-    light_id INT,                          -- light_id como columna normal (puede tener duplicados)
+    light_id INT AUTO_INCREMENT PRIMARY KEY,   -- light_id como clave primaria
     address_light VARCHAR(100),
     type_light VARCHAR(50)
 );
 
-
--- Crear la tabla traffic_detection, ahora que traffic_light tiene el índice en light_id
+-- Crear la tabla traffic_detection, actualizada para referenciar light_id
 CREATE TABLE traffic_detection (
     id INT AUTO_INCREMENT PRIMARY KEY,
     detection BOOLEAN,
@@ -21,8 +20,7 @@ CREATE TABLE traffic_detection (
     CONSTRAINT fk_traffic_light FOREIGN KEY (light_id) REFERENCES traffic_light(light_id)  -- Referencia a light_id en traffic_light
 );
 
-
--- Crear la tabla settings_leds, con la misma referencia de light_id
+-- Crear la tabla settings_leds, actualizada para referenciar light_id
 CREATE TABLE settings_leds (
     leds_id INT AUTO_INCREMENT PRIMARY KEY,
     led_color VARCHAR(50),
