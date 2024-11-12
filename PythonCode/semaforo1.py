@@ -21,11 +21,17 @@ table_name_led_settings = "settings_leds"
 table_name_traffic_light = "traffic_light"
 
 # Coordenadas y tipo de semáforo definidos para cada cliente
-coordinates_client1 = "25.651417, -100.292138"
+coordinates_client1 = "24.555555, -99.555555"
 type_light_client1 = "Semaforo Vehicular"
 
-coordinates_client2 = "25.671234, -100.312345"
+coordinates_client2 = "25.666666, -100.666666"
 type_light_client2 = "Semaforo Peatonal"
+
+coordinates_client3 = "26.777777, -101.777777"
+type_light_client3 = "Semaforo Vehicular"
+
+coordinates_client4 = "28.888888, -102.888888"
+type_light_client4 = "Semaforo Peatonal"
 
 # Setup the MySQL database and table
 def setup_database():
@@ -50,9 +56,13 @@ setup_database()
 
 client1 = paho.Client()
 client2 = paho.Client()
+client3 = paho.Client()
+client4 = paho.Client()
 
 data1 = None
 data2 = None
+data3 = None
+data4 = None
 data_color_time = None
 
 apprun = True
@@ -166,6 +176,16 @@ def message_handling_2(client, userdata, msg):
     data2 = int(msg.payload.decode())
     insert_data(coordinates_client2, type_light_client2, data2, 'Rojo', 3)
 
+def message_handling_3(client, userdata, msg):
+    global data3
+    data3 = int(msg.payload.decode())
+    insert_data(coordinates_client3, type_light_client3, data3, 'Verde', 5)
+
+def message_handling_4(client, userdata, msg):
+    global data4
+    data4 = int(msg.payload.decode())
+    insert_data(coordinates_client4, type_light_client4, data4, 'Rojo', 3)
+
 def message_handling_color_time(client, userdata, msg):
     try:
         message = msg.payload.decode()
@@ -176,8 +196,12 @@ def message_handling_color_time(client, userdata, msg):
 
         if client == client1:
             insert_data(coordinates_client1, type_light_client1, data1, color, time_leds)
-        else:
+        elif client == client2:
             insert_data(coordinates_client2, type_light_client2, data2, color, time_leds)
+        elif client == client3:
+            insert_data(coordinates_client3, type_light_client3, data3, color, time_leds)
+        else:
+            insert_data(coordinates_client4, type_light_client4, data4, color, time_leds)
 
         print(f"Color: {color}, Time: {time_leds}")
 
@@ -192,8 +216,18 @@ def loop_2(num):
     global client2
     client2.loop_forever()
 
+def loop_3(num):
+    global client3
+    client3.loop_forever()
+
+def loop_4(num):
+    global client4
+    client4.loop_forever()
+
 client1.on_message = message_handling_1
 client2.on_message = message_handling_2
+client3.on_message = message_handling_3
+client4.on_message = message_handling_4
 
 client1.message_callback_add("arduino_1/led_state", message_handling_color_time)
 client1.message_callback_add("arduino_1/sensor_deteccion", message_handling_1)
@@ -201,22 +235,40 @@ client1.message_callback_add("arduino_1/sensor_deteccion", message_handling_1)
 client2.message_callback_add("arduino_2/led_state", message_handling_color_time)
 client2.message_callback_add("arduino_2/sensor_deteccion", message_handling_2)
 
+client3.message_callback_add("arduino_3/led_state", message_handling_color_time)
+client3.message_callback_add("arduino_3/sensor_deteccion", message_handling_3)
+
+client4.message_callback_add("arduino_4/led_state", message_handling_color_time)
+client4.message_callback_add("arduino_4/sensor_deteccion", message_handling_4)
+
 def signal_handler(sig, frame):
     global client1
     global client2
+    global client3
+    global client4
     print('You pressed Ctrl+C!')
     client1.disconnect()
     client2.disconnect()
+    client3.disconnect()
+    client4.disconnect()
     print("Quit")
     exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
 
-if client1.connect("10.22.181.132", 1883, 60) != 0:
+if client1.connect("10.22.187.21", 1883, 60) != 0:
     print("Couldn't connect to the mqtt broker")
     exit(1)
-    
-if client2.connect("10.22.181.132", 1883, 60) != 0:
+            
+if client2.connect("10.22.187.21", 1883, 60) != 0:
+    print("Couldn't connect to the mqtt broker")
+    exit(1)
+
+if client3.connect("10.22.187.21", 1883, 60) != 0:
+    print("Couldn't connect to the mqtt broker")
+    exit(1)
+
+if client4.connect("10.22.187.21", 1883, 60) != 0:
     print("Couldn't connect to the mqtt broker")
     exit(1)
 
@@ -224,30 +276,43 @@ client1.subscribe("arduino_1/sensor_deteccion")
 client1.subscribe("arduino_1/led_state")
 client2.subscribe("arduino_2/sensor_deteccion")
 client2.subscribe("arduino_2/led_state")
+client3.subscribe("arduino_3/sensor_deteccion")
+client3.subscribe("arduino_3/led_state")
+client4.subscribe("arduino_4/sensor_deteccion")
+client4.subscribe("arduino_4/led_state")
 
 try:
     print("Press CTRL+C to exit...")
     t1 = threading.Thread(target=loop_1, args=(0,))
     t2 = threading.Thread(target=loop_2, args=(0,))
+    t3 = threading.Thread(target=loop_3, args=(0,))
+    t4 = threading.Thread(target=loop_4, args=(0,))
     
     t1.start()
     t2.start()
-    
+    t3.start()
+    t4.start()
     while apprun:
         try:
             time.sleep(0.5)
             print("data1:", data1)
             print("data2:", data2)
+            print("data3:", data3)
+            print("data4:", data4)
             print("----")
         except KeyboardInterrupt:
             print("Disconnecting")
             apprun = False
             client1.disconnect()
             client2.disconnect()
+            client3.disconnect()
+            client4.disconnect()
             time.sleep(1)
     
     t1.join()
     t2.join()
+    t3.join()
+    t4.join()
     
 except Exception:
     print("Caught an Exception, something went wrong...")
