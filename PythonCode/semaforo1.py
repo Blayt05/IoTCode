@@ -253,13 +253,13 @@ def signal_handler(sig, frame):
     client4.disconnect()
     print("Quit")
     exit(0)
-
+    
 signal.signal(signal.SIGINT, signal_handler)
 
 if client1.connect("10.22.187.21", 1883, 60) != 0:
     print("Couldn't connect to the mqtt broker")
     exit(1)
-            
+
 if client2.connect("10.22.187.21", 1883, 60) != 0:
     print("Couldn't connect to the mqtt broker")
     exit(1)
