@@ -299,7 +299,6 @@ def signal_handler(sig, frame):
     print("Quit")
     exit(0)
 
-# Signal handler
 signal.signal(signal.SIGINT, signal_handler)
 
 if client1.connect("10.22.191.55", 1883, 60) != 0:
